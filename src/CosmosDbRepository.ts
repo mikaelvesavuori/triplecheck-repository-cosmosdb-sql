@@ -59,33 +59,18 @@ class CosmosSqlRepository implements Repository {
   }
 
   /**
-   * @description Get ID of key-named item.
-   */
-  async getIdOfDbItem(key: string): Promise<string | void> {
-    try {
-      const query = `SELECT * FROM c WHERE c.key = "${key}"`;
-      const { resources: items } = await this.container.items.query(query).fetchAll();
-      return cleanCosmosDbItems(items, true);
-    } catch (error) {
-      console.error(error);
-      return error.message;
-    }
-  }
-
-  /**
    * @description Method for updating item.
    */
   async updateData(key: string, data: any): Promise<void> {
     try {
-      const existingItem = await this.getData(key);
+      const { value, id } = await this.getData(key);
 
-      if (existingItem) {
+      if (value) {
         // Do a kind of partial update.
         // Copy the existing item and its values, then update / replace with anything new.
-        let itemToUpdate = { ...existingItem };
-        itemToUpdate.value = JSON.stringify(data);
+        const itemToUpdate = { value: JSON.stringify(data), id, key };
 
-        await this.container.item(existingItem.id).replace(itemToUpdate);
+        await this.container.item(id).replace(itemToUpdate);
         return;
       } else {
         // Create item, since it does not exist.
@@ -102,10 +87,9 @@ class CosmosSqlRepository implements Repository {
    */
   async deleteData(key: string): Promise<void> {
     try {
-      const data = await this.getData(key);
-      if (!data) return;
+      const { id } = await this.getData(key);
+      if (!id) return;
 
-      const id = await this.getIdOfDbItem(key);
       await this.container.item(id, id).delete();
       return;
     } catch (error) {

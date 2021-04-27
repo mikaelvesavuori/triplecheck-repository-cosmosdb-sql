@@ -8,9 +8,9 @@ export function cleanCosmosDbItems(item: Record<string, unknown>, getOnlyId = fa
   }
 
   const _item: any = item[0];
-  const { value, id } = _item;
+  const { value, id, key } = _item;
 
   if (getOnlyId) return id;
 
-  return JSON.parse(value);
+  return { value: JSON.parse(value), id, key };
 }
