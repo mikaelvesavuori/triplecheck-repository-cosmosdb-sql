@@ -14,7 +14,7 @@
   "scripts": {
     "start": "npx ts-node src/index.ts",
     "build": "tsc",
-    "licenses": "npx license-compliance --production --allow 'MIT;ISC;BSD-2-Clause;BSD-3-Clause;0BSD;Apache-2.0;Unlicense'",
+    "licenses": "npx license-compliance --production --direct --allow 'MIT;ISC;BSD-2-Clause;BSD-3-Clause;0BSD;Apache-2.0;Unlicense'",
     "licenses:checker": "npx license-compatibility-checker",
     "prepare": "husky install",
     "docs": "npx typedoc src"
