@@ -10,7 +10,7 @@ function cleanCosmosDbItems(item, getOnlyId = false) {
     const { value, id, key } = _item;
     if (getOnlyId)
         return id;
-    return { value: JSON.parse(value), id, key };
+    return JSON.parse(value);
 }
 exports.cleanCosmosDbItems = cleanCosmosDbItems;
 //# sourceMappingURL=cleanCosmosDbItems.js.map

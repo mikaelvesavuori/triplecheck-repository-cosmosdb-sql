@@ -45,11 +45,25 @@ class CosmosSqlRepository {
             }
         });
     }
+    getIdOfDbItem(key) {
+        return tslib_1.__awaiter(this, void 0, void 0, function* () {
+            try {
+                const query = `SELECT * FROM c WHERE c.key = "${key}"`;
+                const { resources: items } = yield this.container.items.query(query).fetchAll();
+                return cleanCosmosDbItems_1.cleanCosmosDbItems(items, true);
+            }
+            catch (error) {
+                console.error(error);
+                return error.message;
+            }
+        });
+    }
     updateData(key, data) {
         return tslib_1.__awaiter(this, void 0, void 0, function* () {
             try {
-                const { value, id } = yield this.getData(key);
-                if (value) {
+                const existingValue = yield this.getData(key);
+                if (existingValue) {
+                    const id = yield this.getIdOfDbItem(key);
                     const itemToUpdate = { value: JSON.stringify(data), id, key };
                     yield this.container.item(id).replace(itemToUpdate);
                     return;
@@ -67,7 +81,7 @@ class CosmosSqlRepository {
     deleteData(key) {
         return tslib_1.__awaiter(this, void 0, void 0, function* () {
             try {
-                const { id } = yield this.getData(key);
+                const id = yield this.getIdOfDbItem(key);
                 if (!id)
                     return;
                 yield this.container.item(id, id).delete();
