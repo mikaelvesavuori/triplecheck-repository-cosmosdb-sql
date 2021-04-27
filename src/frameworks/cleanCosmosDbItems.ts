@@ -12,7 +12,5 @@ export function cleanCosmosDbItems(item: Record<string, unknown>, getOnlyId = fa
 
   if (getOnlyId) return id;
 
-  return {
-    ...JSON.parse(value)
-  };
+  return JSON.parse(value);
 }
