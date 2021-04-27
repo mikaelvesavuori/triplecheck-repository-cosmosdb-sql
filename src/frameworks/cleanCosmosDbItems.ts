@@ -1,5 +1,3 @@
-import { Item } from '@azure/cosmos';
-
 /**
  * @description Get cleaned CosmosDB items from array of items
  */
