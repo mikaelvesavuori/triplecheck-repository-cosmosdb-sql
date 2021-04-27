@@ -5,6 +5,7 @@ declare class CosmosSqlRepository implements Repository {
     constructor(container: any);
     private createData;
     getData(key: string): Promise<any>;
+    getIdOfDbItem(key: string): Promise<string | void>;
     updateData(key: string, data: any): Promise<void>;
     deleteData(key: string): Promise<void>;
 }

@@ -32,79 +32,85 @@ class CosmosSqlRepository implements Repository {
    * @description Method for creating item.
    */
   private async createData(key: string, data: any): Promise<void> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        await this.container.items.create({
-          key,
-          value: JSON.stringify(data)
-        });
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
-    });
+    try {
+      await this.container.items.create({
+        key,
+        value: JSON.stringify(data)
+      });
+      return;
+    } catch (error) {
+      console.error(error);
+      return error.message;
+    }
   }
 
   /**
    * @description Method for reading item(s).
    */
   async getData(key: string): Promise<any> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        if (!key) reject('Missing key!');
-        const query = `SELECT * FROM c WHERE c.key = "${key}"`;
-        const { resources: items } = await this.container.items.query(query).fetchAll();
-        resolve(cleanCosmosDbItems(items));
-      } catch (error) {
-        reject(error);
-      }
-    });
+    try {
+      const query = `SELECT * FROM c WHERE c.key = "${key}"`;
+      const { resources: items } = await this.container.items.query(query).fetchAll();
+      return cleanCosmosDbItems(items);
+    } catch (error) {
+      console.error(error);
+      return error.message;
+    }
+  }
+
+  /**
+   * @description Get ID of key-named item.
+   */
+  async getIdOfDbItem(key: string): Promise<string | void> {
+    try {
+      const query = `SELECT * FROM c WHERE c.key = "${key}"`;
+      const { resources: items } = await this.container.items.query(query).fetchAll();
+      return cleanCosmosDbItems(items, true);
+    } catch (error) {
+      console.error(error);
+      return error.message;
+    }
   }
 
   /**
    * @description Method for updating item.
    */
   async updateData(key: string, data: any): Promise<void> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        if (!data) reject('Missing data!');
+    try {
+      const existingItem = await this.getData(key);
 
-        const existingItem = await this.getData(key);
+      if (existingItem) {
+        // Do a kind of partial update.
+        // Copy the existing item and its values, then update / replace with anything new.
+        let itemToUpdate = { ...existingItem };
+        itemToUpdate.value = JSON.stringify(data);
 
-        if (existingItem) {
-          // Do a kind of partial update.
-          // Copy the existing item and its values, then update / replace with anything new.
-          let itemToUpdate = { ...existingItem };
-          itemToUpdate.value = JSON.stringify(data);
-
-          await this.container.item(existingItem.id).replace(itemToUpdate);
-          resolve();
-        } else {
-          // Create item, since it does not exist.
-          await this.createData(key, data);
-        }
-      } catch (error) {
-        reject(error);
+        await this.container.item(existingItem.id).replace(itemToUpdate);
+        return;
+      } else {
+        // Create item, since it does not exist.
+        await this.createData(key, data);
       }
-    });
+    } catch (error) {
+      console.error(error);
+      return error.message;
+    }
   }
 
   /**
    * @description Method for deleting item.
    */
   async deleteData(key: string): Promise<void> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        if (!key) reject('Missing key!');
-        const data = await this.getData(key);
-        if (!data) resolve();
+    try {
+      const data = await this.getData(key);
+      if (!data) return;
 
-        const { id } = data;
-        await this.container.item(id, id).delete();
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
-    });
+      const id = await this.getIdOfDbItem(key);
+      await this.container.item(id, id).delete();
+      return;
+    } catch (error) {
+      console.error(error);
+      return error.message;
+    }
   }
 }
