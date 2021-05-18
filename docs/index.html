@@ -70,6 +70,57 @@
 					<h2>Instructions</h2>
 				</a>
 				<p>You&#39;ll need to have a CosmosDB account up, a container (SQL) and set the Partition Key to <code>/id</code>. Also, I&#39;d recommend maybe setting the consistency to &quot;Strong&quot;. Consider using the serverless option for CosmosDB, since that will be a lot cheaper for smaller workloads.</p>
+				<a href="#basic-implementation" id="basic-implementation" style="color: inherit; text-decoration: none;">
+					<h2>Basic implementation</h2>
+				</a>
+				<p>In your <code>triplecheck-broker</code> implementation, do a regular import for <code>triplecheck-repository-cosmosdbsql</code> and pass the repository to the broker. In an Azure Functions context, an implementation could look like:</p>
+				<pre><code class="language-TypeScript"><span style="color: #AF00DB">import</span><span style="color: #000000"> { </span><span style="color: #001080">TripleCheckBroker</span><span style="color: #000000"> } </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;triplecheck-broker&#039;</span><span style="color: #000000">;</span>
+<span style="color: #AF00DB">import</span><span style="color: #000000"> { </span><span style="color: #001080">CosmosSqlRepository</span><span style="color: #000000"> } </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;triplecheck-repository-cosmosdb-sql&#039;</span><span style="color: #000000">;</span>
+
+<span style="color: #AF00DB">export</span><span style="color: #000000"> </span><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">config</span><span style="color: #000000"> = {</span>
+<span style="color: #000000">  </span><span style="color: #001080">endpoint:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;&lt;your_endpoint_uri&gt;&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">key:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;&lt;primary_key&gt;&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">  </span><span style="color: #001080">databaseId:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;triplecheck&#039;</span><span style="color: #000000">, </span><span style="color: #008000">// &lt;--- example</span>
+<span style="color: #000000">  </span><span style="color: #001080">containerId:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;broker_sql&#039;</span><span style="color: #000000">  </span><span style="color: #008000">// &lt;--- example</span>
+<span style="color: #000000">};</span>
+
+<span style="color: #008000">/**</span>
+<span style="color: #008000"> * </span><span style="color: #0000FF">@description</span><span style="color: #008000"> The handler.</span>
+<span style="color: #008000"> */</span>
+<span style="color: #AF00DB">export</span><span style="color: #000000"> </span><span style="color: #0000FF">async</span><span style="color: #000000"> </span><span style="color: #0000FF">function</span><span style="color: #000000"> </span><span style="color: #795E26">handler</span><span style="color: #000000">(</span><span style="color: #001080">context</span><span style="color: #000000">: </span><span style="color: #267F99">any</span><span style="color: #000000">, </span><span style="color: #001080">req</span><span style="color: #000000">: </span><span style="color: #267F99">any</span><span style="color: #000000">) {</span>
+<span style="color: #000000">  </span><span style="color: #0000FF">const</span><span style="color: #000000"> [</span><span style="color: #0070C1">request</span><span style="color: #000000">, </span><span style="color: #0070C1">payload</span><span style="color: #000000">] = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">getRequestData</span><span style="color: #000000">(</span><span style="color: #001080">req</span><span style="color: #000000">);</span>
+
+<span style="color: #000000">  </span><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">repository</span><span style="color: #000000"> = </span><span style="color: #795E26">CosmosSqlRepository</span><span style="color: #000000">(</span><span style="color: #001080">config</span><span style="color: #000000">);</span>
+<span style="color: #000000">  </span><span style="color: #0000FF">const</span><span style="color: #000000"> { </span><span style="color: #0070C1">responseData</span><span style="color: #000000">, </span><span style="color: #0070C1">status</span><span style="color: #000000">, </span><span style="color: #0070C1">headers</span><span style="color: #000000"> } = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">TripleCheckBroker</span><span style="color: #000000">(</span><span style="color: #001080">request</span><span style="color: #000000">, </span><span style="color: #001080">payload</span><span style="color: #000000">, </span><span style="color: #001080">repository</span><span style="color: #000000">);</span>
+
+<span style="color: #000000">  </span><span style="color: #AF00DB">return</span><span style="color: #000000"> {</span>
+<span style="color: #000000">    </span><span style="color: #001080">status</span><span style="color: #000000">,</span>
+<span style="color: #000000">    </span><span style="color: #001080">body:</span><span style="color: #000000"> </span><span style="color: #001080">responseData</span>
+<span style="color: #000000">  };</span>
+<span style="color: #000000">}</span>
+
+<span style="color: #008000">/**</span>
+<span style="color: #008000"> * </span><span style="color: #0000FF">@description</span><span style="color: #008000"> Utility function to get the data we need to run the TripleCheck broker. Expects the full Azure Functions request object.</span>
+<span style="color: #008000"> */</span>
+<span style="color: #0000FF">async</span><span style="color: #000000"> </span><span style="color: #0000FF">function</span><span style="color: #000000"> </span><span style="color: #795E26">getRequestData</span><span style="color: #000000">(</span><span style="color: #001080">req</span><span style="color: #000000">: </span><span style="color: #267F99">any</span><span style="color: #000000">) {</span>
+<span style="color: #000000">  </span><span style="color: #0000FF">const</span><span style="color: #000000"> { </span><span style="color: #0070C1">body</span><span style="color: #000000">, </span><span style="color: #0070C1">method</span><span style="color: #000000">, </span><span style="color: #0070C1">url</span><span style="color: #000000"> } = </span><span style="color: #001080">req</span><span style="color: #000000">;</span>
+
+<span style="color: #000000">  </span><span style="color: #0000FF">let</span><span style="color: #000000"> [</span><span style="color: #001080">pathname</span><span style="color: #000000">, </span><span style="color: #001080">search</span><span style="color: #000000">] = </span><span style="color: #001080">url</span><span style="color: #000000">.</span><span style="color: #795E26">split</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;?&#039;</span><span style="color: #000000">);</span>
+<span style="color: #000000">  </span><span style="color: #AF00DB">if</span><span style="color: #000000"> (!</span><span style="color: #001080">pathname</span><span style="color: #000000">) </span><span style="color: #001080">pathname</span><span style="color: #000000"> = </span><span style="color: #001080">url</span><span style="color: #000000">;</span>
+
+<span style="color: #000000">  </span><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">payload</span><span style="color: #000000"> = </span><span style="color: #0000FF">typeof</span><span style="color: #000000"> </span><span style="color: #001080">body</span><span style="color: #000000"> === </span><span style="color: #A31515">&#039;string&#039;</span><span style="color: #000000"> ? </span><span style="color: #267F99">JSON</span><span style="color: #000000">.</span><span style="color: #795E26">parse</span><span style="color: #000000">(</span><span style="color: #001080">body</span><span style="color: #000000">) : </span><span style="color: #001080">body</span><span style="color: #000000">;</span>
+
+<span style="color: #000000">  </span><span style="color: #AF00DB">return</span><span style="color: #000000"> [</span>
+<span style="color: #000000">    {</span>
+<span style="color: #000000">      </span><span style="color: #001080">method</span><span style="color: #000000">,</span>
+<span style="color: #000000">      </span><span style="color: #001080">pathname</span><span style="color: #000000">,</span>
+<span style="color: #000000">      </span><span style="color: #001080">search</span>
+<span style="color: #000000">    },</span>
+<span style="color: #000000">    </span><span style="color: #001080">payload</span>
+<span style="color: #000000">  ];</span>
+<span style="color: #000000">}</span>
+
+</code></pre>
 			</div>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
