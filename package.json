@@ -1,6 +1,6 @@
 {
   "name": "triplecheck-repository-cosmosdb-sql",
-  "version": "0.0.5",
+  "version": "1.0.0",
   "description": "",
   "main": "build/index.js",
   "keywords": [
