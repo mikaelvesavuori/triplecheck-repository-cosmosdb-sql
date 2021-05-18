@@ -1,5 +1,7 @@
 # triplecheck-repository-cosmosdb-sql
 
+![TripleCheck database repository](readme/triplecheck-repository.png)
+
 ## TripleCheck: Azure CosmosDB (SQL) database repository
 
 Database utility for using CosmosDB (SQL) with TripleCheck broker.
